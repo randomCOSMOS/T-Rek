@@ -34,19 +34,34 @@ async def on_message(msg):
         return
     
     # only reply msg if prefix is "="
-    if msg.content[0] == "=":
+    if msg.content.startswith("="):
         msg.content = msg.content[1:]
 
         username = msg.author
         user_message = msg.content
         channel = str(msg.channel)
 
-        await msg.channel.send("Received msg and logged!")
-        print(f"Data Received: [{channel}] {username}: '{user_message}'")
+        await msg.channel.send("You wanna send that?")
 
-        doc_ref = db.collection('logs').document(str(username))
-        doc_ref.set({datetime.today().strftime('%d-%m-%Y'): "Worked on data from somewhere"})
-        print("Data Stored Successfully!")
+        def check(m):
+            return m.author == username and m.channel == msg.channel
+
+        try:
+            response = await client.wait_for('message', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            return
+
+        if response.content.lower() in ("yes", "y"):
+            response.delete()
+            await msg.channel.send("Received msg and logged!")
+            print(f"{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} - Data Received - [{channel}] {username}: '{user_message}'")
+
+            doc_ref = db.collection('logs').document(str(username))
+            doc_ref.set({datetime.today().strftime('%d-%m-%Y'): user_message})
+
+            print(f"{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} - Data Stored Successfully!")
+        else:
+            await msg.channel.send("Ok discarding that!")
 
 
 client.run(DISCORD_TOKEN)
