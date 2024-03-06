@@ -41,18 +41,19 @@ async def on_message(msg):
         user_message = msg.content
         channel = str(msg.channel)
 
-        await msg.channel.send("You wanna send that?")
-
-        def check(m):
+        # ask confirmation from user
+        confirmation = await msg.channel.send("You wanna send that?")
+        def check(m): # check if the channel and user are the same
             return m.author == username and m.channel == msg.channel
-
-        try:
+        try: # get the response or time out if afk
             response = await client.wait_for('message', check=check, timeout=30.0)
         except asyncio.TimeoutError:
             return
 
-        if response.content.lower() in ("yes", "y"):
-            response.delete()
+        # what happens if response is yes
+        if response.content.lower() in ("yes", "y", "ye"):
+            await confirmation.delete()
+            await response.delete()
             await msg.channel.send("Received msg and logged!")
             print(f"{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} - Data Received - [{channel}] {username}: '{user_message}'")
 
@@ -61,6 +62,7 @@ async def on_message(msg):
 
             print(f"{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} - Data Stored Successfully!")
         else:
+            await response.delete()
             await msg.channel.send("Ok discarding that!")
 
 
