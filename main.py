@@ -52,19 +52,22 @@ async def on_message(msg):
 
         # what happens if response is yes
         if response.content.lower() in ("yes", "y", "ye"):
+            # delete redundant messages
             await confirmation.delete()
             await response.delete()
+
+            # data is received and logged both side (client and server)
             await msg.channel.send("Received msg and logged!")
             print(f"{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} - Data Received - [{channel}] {username}: '{user_message}'")
 
+            # data sent to firebase and logged on server side
             doc_ref = db.collection('logs').document(str(username))
             doc_ref.set({datetime.today().strftime('%d-%m-%Y'): user_message})
-
             print(f"{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} - Data Stored Successfully!")
         else:
             await response.delete()
             await msg.channel.send("Ok discarding that!")
 
-
+# running the bot.....
 client.run(DISCORD_TOKEN)
 
