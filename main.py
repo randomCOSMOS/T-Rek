@@ -1,15 +1,21 @@
 import os
+import json
 from dotenv import load_dotenv
 from discord import Intents, Client, Message, AllowedMentions
 import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import firestore
+from firebase_admin import credentials, firestore
 from datetime import datetime
+from random import choice
 
 # loading env variables
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 FIREBASE_TOKEN = os.getenv("FIREBASE_TOKEN")
+
+# some predefined data
+compliments = ["Great job!", "Excellent job!", "Impressive work!", "Great effort!", "Fantastic job!", "Well Done!"]
+with open("members.json", "r") as file:
+    members = json.load(file)
 
 # connecting to the firestore DB
 cred = credentials.Certificate(FIREBASE_TOKEN)
@@ -37,14 +43,14 @@ async def on_message(msg):
     if msg.content.startswith("="):
         msg.content = msg.content[1:]
 
-        username = msg.author
+        username = str(msg.author)
         user_message = msg.content
-        channel = str(msg.channel)
+        channel = msg.channel
 
         # ask confirmation from user
-        confirmation = await msg.channel.send("You wanna send that?")
+        confirmation = await channel.send("You wanna send that?")
         def check(m): # check if the channel and user are the same
-            return m.author == username and m.channel == msg.channel
+            return m.author == msg.author and m.channel == channel
         try: # get the response or time out if afk
             response = await client.wait_for('message', check=check, timeout=30.0)
         except asyncio.TimeoutError:
@@ -57,16 +63,17 @@ async def on_message(msg):
             await response.delete()
 
             # data is received and logged both side (client and server)
-            await msg.channel.send("Received msg and logged!")
-            print(f"{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} - Data Received - [{channel}] {username}: '{user_message}'")
+            await channel.send(choice(compliments))
+            print(f"{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} - Data Received - [{str(channel)}] {username}: '{user_message}'")
 
             # data sent to firebase and logged on server side
-            doc_ref = db.collection('logs').document(str(username))
-            doc_ref.set({datetime.today().strftime('%d-%m-%Y'): user_message})
+            doc_ref = db.collection('logs').document(members[username]["name"])
+            data = {"domain": members[username]["domain"], "progress": user_message}
+            doc_ref.set({datetime.today().strftime('%d-%m-%Y'): data})
             print(f"{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} - Data Stored Successfully!")
         else:
             await response.delete()
-            await msg.channel.send("Ok discarding that!")
+            await channel.send("Ok discarding that!")
 
 # running the bot.....
 client.run(DISCORD_TOKEN)
