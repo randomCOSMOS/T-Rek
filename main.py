@@ -48,7 +48,7 @@ async def on_message(msg):
         channel = msg.channel
 
         # ask confirmation from user
-        confirmation = await channel.send("You wanna send that?")
+        confirmation = await msg.reply("Finalized your post?", mention_author=False)
         def check(m): # check if the channel and user are the same
             return m.author == msg.author and m.channel == channel
         try: # get the response or time out if afk
@@ -62,13 +62,27 @@ async def on_message(msg):
             await confirmation.delete()
             await response.delete()
 
+            # formatting data
+            try:
+                link = user_message.split("**Link:**")
+                project = link[0].split("**Project Status:**")
+                progress = project[0].split("**Progress:**")
+
+                data = {
+                    "progress": progress[1].strip(),
+                    "project status": project[1].strip(),
+                    "link": link[1].strip()
+                }
+            except:
+                await channel.send("The format was wrong! 😔")
+                return
+
             # data is received and logged both side (client and server)
             await channel.send(choice(compliments))
             print(f"{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} - Data Received - [{str(channel)}] {username}: '{user_message}'")
 
             # data sent to firebase and logged on server side
-            doc_ref = db.collection('logs').document(members[username]["name"])
-            data = {"domain": members[username]["domain"], "progress": user_message}
+            doc_ref = db.collection(members[username]["name"]).document(members[username]["domain"])
             doc_ref.set({datetime.today().strftime('%d-%m-%Y'): data})
             print(f"{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} - Data Stored Successfully!")
         else:
