@@ -4,33 +4,36 @@ from discord import Intents, Client, Message, AllowedMentions
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
+from datetime import datetime
 
-cred = credentials.Certificate('./t-rek-cfafd-firebase-adminsdk-651wx-a3fc8cbe5f.json')
+# loading env variables
+load_dotenv()
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+FIREBASE_TOKEN = os.getenv("FIREBASE_TOKEN")
+
+# connecting to the firestore DB
+cred = credentials.Certificate(FIREBASE_TOKEN)
 app = firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-# doc_ref = db.collection('logs').document()
-# doc_ref.set()
-
-# 
-load_dotenv()
-TOKEN = os.getenv("DISCORD_TOKEN")
-
-
+# managing intents
 intents = Intents.default()
 intents.message_content = True
 client = Client(intents=intents)
 
-
+# logging when bot is online
 @client.event
 async def on_ready():
     print(f"We have logged in as {client.user}")
 
+# function when a msg is sent
 @client.event
 async def on_message(msg):
+    # ignore msg if sender is the bot itself, to prevent looping lol
     if msg.author == client.user:
         return
     
+    # only reply msg if prefix is "="
     if msg.content[0] == "=":
         msg.content = msg.content[1:]
 
@@ -38,9 +41,13 @@ async def on_message(msg):
         user_message = msg.content
         channel = str(msg.channel)
 
-        print(f"[{channel}] {username}: '{user_message}'")
-        await msg.channel.send(f"Got an message from {username.mention} that says \n `{user_message}`")
+        await msg.channel.send("Received msg and logged!")
+        print(f"Data Received: [{channel}] {username}: '{user_message}'")
+
+        doc_ref = db.collection('logs').document(str(username))
+        doc_ref.set({datetime.today().strftime('%d-%m-%Y'): "Worked on data from somewhere"})
+        print("Data Stored Successfully!")
 
 
-client.run(TOKEN)
+client.run(DISCORD_TOKEN)
 
