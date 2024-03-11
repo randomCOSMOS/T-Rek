@@ -40,15 +40,15 @@ async def on_message(msg):
         return
     
     # only reply msg if prefix is "="
-    if msg.content.startswith("="):
-        msg.content = msg.content[1:]
+    if msg.content.startswith("**"):
+        # msg.content = msg.content[1:]
 
         username = str(msg.author)
         user_message = msg.content
         channel = msg.channel
 
         # ask confirmation from user
-        confirmation = await msg.reply("Finalized your post?", mention_author=False)
+        confirmation = await msg.reply("Finalized your post? (Yes/No)", mention_author=True)
         def check(m): # check if the channel and user are the same
             return m.author == msg.author and m.channel == channel
         try: # get the response or time out if afk
