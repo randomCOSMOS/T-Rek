@@ -53,7 +53,8 @@ async def on_message(msg):
             return m.author == msg.author and m.channel == channel
         try: # get the response or time out if afk
             response = await client.wait_for('message', check=check, timeout=30.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
+            await confirmation.delete()
             return
 
         # what happens if response is yes
