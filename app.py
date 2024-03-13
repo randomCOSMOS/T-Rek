@@ -83,7 +83,7 @@ async def on_message(msg):
 
             # data sent to firebase and logged on server side
             doc_ref = db.collection(members[username]["name"]).document(members[username]["domain"])
-            doc_ref.set({datetime.today().strftime('%d-%m-%Y'): data})
+            doc_ref.update({datetime.today().strftime('%d-%m-%Y'): data})
             print(f"{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} - Data Stored Successfully!")
         else:
             await response.delete()
