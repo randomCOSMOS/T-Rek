@@ -92,6 +92,7 @@ async def on_message(msg):
             print(f"{datetime.now().strftime("%d/%m/%Y %H:%M:%S")} - Data Stored Successfully!")
         else:
             await response.delete()
+            await confirmation.delete()
             await channel.send("Ok discarding that!")
 
 # running the bot.....
