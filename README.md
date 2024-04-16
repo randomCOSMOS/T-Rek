@@ -1,7 +1,6 @@
 # T-Rek: The Record Keeper 🦖
 
 T-Rek is a personal bot for Discord that efficiently stores channel data on Firebase.
-> Prefix: "="
 
 ### Getting Started:
 1. **Installation:** Clone the repository.
