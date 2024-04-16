@@ -40,7 +40,7 @@ async def on_message(msg):
         return
     
     # only reply msg if prefix is "="
-    if msg.content.startswith("**"):
+    if msg.content.startswith("**") or msg.content.startswith("Prog"):
         # msg.content = msg.content[1:]
 
         username = str(msg.author)
@@ -75,8 +75,19 @@ async def on_message(msg):
                     "link": link[1].strip()
                 }
             except:
-                await channel.send("The format was wrong! 😔")
-                return
+                try:
+                    link = user_message.split("Link:")
+                    project = link[0].split("Project Status:")
+                    progress = project[0].split("Progress:")
+
+                    data = {
+                        "progress": progress[1].strip(),
+                        "project status": project[1].strip(),
+                        "link": link[1].strip()
+                    }
+                except:
+                    await channel.send("The format was wrong! 😔")
+                    return
 
             # data is received and logged both side (client and server)
             await channel.send(choice(compliments))
