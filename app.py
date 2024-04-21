@@ -30,40 +30,38 @@ client = commands.Bot(command_prefix=".",intents=intents)
 
 # function when a msg is sent
 @client.event
-async def on_message(msg, date=datetime.now()):
+async def on_message(msg, date=datetime.now(), admin=False):
     # ignore msg if sender is the bot itself, to prevent looping lol
     if msg.author == client.user:
         return
     
     # only reply msg if prefix is "="
     if msg.content.startswith("**") or msg.content.startswith("Prog") or msg.content.startswith("prog"):
-        # msg.content = msg.content[1:]
-
         username = str(msg.author)
-        user_message = msg.content.lower()
+        user_message = msg.content.lower().replace("*", "")
         channel = msg.channel
 
         # ask confirmation from user
-        confirmation = await msg.reply("Finalized your post? (Yes/No)", mention_author=True)
-        def check(m): # check if the channel and user are the same
-            return (m.author == msg.author or m.author == "randomcosmos") and m.channel == channel
-        try: # get the response or time out if afk
-            response = await client.wait_for('message', check=check, timeout=30.0)
-        except TimeoutError:
-            await confirmation.delete()
-            return
+        if not admin:
+            confirmation = await msg.reply("Finalized your post? (Yes/No)", mention_author=True)
+            def check(m): # check if the channel and user are the same
+                return m.author == msg.author and m.channel == channel
+            try: # get the response or time out if afk
+                response = await client.wait_for('message', check=check, timeout=30.0)
+                # delete redundant messages
+                await confirmation.delete()
+                await response.delete()
+            except TimeoutError:
+                await confirmation.delete()
+                return
 
         # what happens if response is yes
-        if response.content.lower() in ("yes", "y", "ye"):
-            # delete redundant messages
-            await confirmation.delete()
-            await response.delete()
-
+        if admin or response.content.lower() in ("yes", "y", "ye"):
             # formatting data
             try:
-                link = user_message.split("**link**")
-                project = link[0].split("**project status**")
-                progress = project[0].split("**progress**")
+                link = user_message.split("link")
+                project = link[0].split("project status")
+                progress = project[0].split("progress")
 
                 data = {
                     "progress": progress[1].replace(":", "", 1).strip(),
@@ -71,19 +69,8 @@ async def on_message(msg, date=datetime.now()):
                     "link": link[1].replace(":", "", 1).strip() if len(link) > 1 else ""
                 }
             except:
-                try:
-                    link = user_message.split("link")
-                    project = link[0].split("project status")
-                    progress = project[0].split("progress")
-
-                    data = {
-                        "progress": progress[1].replace(":", "", 1).strip(),
-                        "project status": project[1].replace(":", "", 1).strip(),
-                        "link": link[1].replace(":", "", 1).strip() if len(link) > 1 else ""
-                    }
-                except:
-                    await channel.send("The format was wrong! 😔")
-                    return
+                await msg.reply("The format was wrong! 😔", mention_author=True)
+                return
 
             # data is received and logged both side (client and server)
             await msg.reply(choice(compliments), mention_author=False)
@@ -105,9 +92,14 @@ async def on_message(msg, date=datetime.now()):
 # slash command
 @client.tree.command(name="scan",description="scans data after a date and sends it.")
 async def scan(interaction:Interaction, date: str):
-    await interaction.response.send_message("Hello World!")
+    await interaction.response.send_message("""```ansi
+[2;37mSending info to [2;34mDataBase...[0m[2;37m[0m[2;34m[0m
+```""")
     async for msg in interaction.channel.history(limit=50, after=datetime.strptime(date, "%d/%m/%y"), before=datetime.strptime(date, "%d/%m/%y") + timedelta(days=1)):
-        await on_message(msg, datetime.strptime(date, "%d/%m/%y"))
+        await on_message(msg, datetime.strptime(date, "%d/%m/%y"), admin=True)
+    await interaction.channel.send("""```ansi
+[2;37m...everything sent[2;34m![0m[2;37m[0m[2;34m[0m
+```""")
 
 # logging when bot is online
 @client.event
