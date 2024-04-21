@@ -61,25 +61,25 @@ async def on_message(msg, date=datetime.now()):
 
             # formatting data
             try:
-                link = user_message.split("**link:**")
-                project = link[0].split("**project status:**")
-                progress = project[0].split("**progress:**")
+                link = user_message.split("**link**")
+                project = link[0].split("**project status**")
+                progress = project[0].split("**progress**")
 
                 data = {
-                    "progress": progress[1].strip(),
-                    "project status": project[1].strip(),
-                    "link": link[1].strip() if len(link) > 1 else ""
+                    "progress": progress[1].replace(":", "", 1).strip(),
+                    "project status": project[1].replace(":", "", 1).strip(),
+                    "link": link[1].replace(":", "", 1).strip() if len(link) > 1 else ""
                 }
             except:
                 try:
-                    link = user_message.split("link:")
-                    project = link[0].split("project status:")
-                    progress = project[0].split("progress:")
+                    link = user_message.split("link")
+                    project = link[0].split("project status")
+                    progress = project[0].split("progress")
 
                     data = {
-                        "progress": progress[1].strip(),
-                        "project status": project[1].strip(),
-                        "link": link[1].strip() if len(link) > 1 else ""
+                        "progress": progress[1].replace(":", "", 1).strip(),
+                        "project status": project[1].replace(":", "", 1).strip(),
+                        "link": link[1].replace(":", "", 1).strip() if len(link) > 1 else ""
                     }
                 except:
                     await channel.send("The format was wrong! 😔")
