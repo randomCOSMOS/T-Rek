@@ -86,7 +86,7 @@ async def on_message(msg, date=datetime.now()):
                     return
 
             # data is received and logged both side (client and server)
-            await channel.send(choice(compliments))
+            await msg.reply(choice(compliments), mention_author=False)
             print(f"{date.strftime("%d/%m/%Y %H:%M:%S")} - Data Received - [{str(channel)}] {username}: '{user_message}'")
 
             # data sent to firebase and logged on server side
@@ -108,7 +108,6 @@ async def scan(interaction:Interaction, date: str):
     await interaction.response.send_message("Hello World!")
     async for msg in interaction.channel.history(limit=50, after=datetime.strptime(date, "%d/%m/%y"), before=datetime.strptime(date, "%d/%m/%y") + timedelta(days=1)):
         await on_message(msg, datetime.strptime(date, "%d/%m/%y"))
-        # print("MESSAGE IS:", msg.content)
 
 # logging when bot is online
 @client.event
